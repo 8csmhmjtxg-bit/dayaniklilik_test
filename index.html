@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>İki Bira Daveti 🍻</title>
+  <style>
+    :root{
+      --card-bg: rgba(255,255,255,0.85);
+      --shadow: 0 10px 30px rgba(0,0,0,0.12);
+      --radius: 18px;
+    }
+    *{ box-sizing: border-box; }
+    body{
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at 20% 10%, #ffffff, #eef2f7 55%, #e6ecf5);
+      color: #111827;
+      padding: 18px;
+    }
+
+    .card{
+      width: min(560px, 96vw);
+      background: var(--card-bg);
+      border: 1px solid rgba(17,24,39,0.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(6px);
+    }
+
+    .header{
+      padding: 22px 22px 14px;
+      display: grid;
+      gap: 12px;
+      text-align: center;
+    }
+
+    h1{
+      font-size: clamp(20px, 4vw, 28px);
+      line-height: 1.15;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    p{
+      margin: 0;
+      font-size: 15px;
+      color: rgba(17,24,39,0.78);
+    }
+
+    .photo{
+      width: 100%;
+      aspect-ratio: 16/10;
+      object-fit: cover;
+      display: block;
+      background: rgba(0,0,0,0.04);
+    }
+
+    .content{
+      padding: 18px 22px 22px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .buttons{
+      position: relative;
+      height: 92px;
+      display: grid;
+      place-items: center;
+    }
+
+    .btn-row{
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 360px;
+    }
+
+    button{
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: transform 120ms ease, filter 120ms ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      min-width: 120px;
+    }
+    button:active{ transform: translateY(1px) scale(0.99); }
+
+    #yes{
+      background: #16a34a;
+      color: white;
+    }
+    #yes:hover{ filter: brightness(1.05); }
+
+    #no{
+      background: #ef4444;
+      color: white;
+      position: absolute;
+      left: 60%;
+      top: 14px;
+      min-width: 120px;
+    }
+
+    .hidden{ display: none; }
+
+    .success{
+      text-align: center;
+      display: grid;
+      gap: 10px;
+    }
+    .success h2{
+      margin: 0;
+      font-size: clamp(18px, 3.6vw, 24px);
+      letter-spacing: -0.01em;
+    }
+    .success .note{
+      font-size: 15px;
+      color: rgba(17,24,39,0.78);
+    }
+
+    .footer-tip{
+      text-align: center;
+      font-size: 12px;
+      color: rgba(17,24,39,0.55);
+    }
+
+    .pill{
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(17,24,39,0.06);
+      font-size: 12px;
+      color: rgba(17,24,39,0.65);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1) SORU EKRANI -->
+  <main class="card" id="screenQuestion">
+    <img class="photo" src="foto1.jpg" alt="Fotoğraf 1" />
+
+    <div class="header">
+      <span class="pill">🍻 mini davet</span>
+      <h1>Benimle iki bira içmek ister misin?</h1>
+      <p>Not: “Hayır” demek istersen… buton biraz utangaç 😄</p>
+    </div>
+
+    <div class="content">
+      <div class="buttons" id="btnArea">
+        <div class="btn-row">
+          <button id="yes" type="button">Evet</button>
+        </div>
+        <button id="no" type="button" aria-label="Hayır">Hayır</button>
+      </div>
+
+      <div class="footer-tip">📌 Fotoğraflar aynı klasörde olmalı: <b>foto1.jpg</b> ve <b>foto2.jpg</b></div>
+    </div>
+  </main>
+
+  <!-- 2) BAŞARI EKRANI -->
+  <main class="card hidden" id="screenSuccess">
+    <img class="photo" src="foto2.jpg" alt="Fotoğraf 2" />
+
+    <div class="header success">
+      <h2>🎉 Tebrikler doğru karar!</h2>
+      <div class="note">Hangi gün müsait olduğunuzu lütfen <b>Fatihe</b> bildirin.</div>
+    </div>
+
+    <div class="content">
+      <div class="footer-tip">İstersen bu sayfayı arkadaşlarına da gönder 😄</div>
+    </div>
+  </main>
+
+  <script>
+    const noBtn = document.getElementById("no");
+    const yesBtn = document.getElementById("yes");
+    const btnArea = document.getElementById("btnArea");
+    const screenQuestion = document.getElementById("screenQuestion");
+    const screenSuccess = document.getElementById("screenSuccess");
+
+    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+    function moveNoButton(){
+      const areaRect = btnArea.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
+
+      // Maksimum hareket alanı (buton dışarı taşmasın)
+      const maxX = areaRect.width - btnRect.width;
+      const maxY = areaRect.height - btnRect.height;
+
+      // Biraz daha "kaçıyormuş" gibi hissetsin diye rastgele + clamp
+      const x = clamp(Math.random() * maxX, 0, maxX);
+      const y = clamp(Math.random() * maxY, 0, maxY);
+
+      noBtn.style.left = x + "px";
+      noBtn.style.top  = y + "px";
+    }
+
+    // Masaüstü: yaklaşınca kaç
+    noBtn.addEventListener("mouseover", moveNoButton);
+
+    // Mobil: dokununca kaç (tıklanamasın)
+    noBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      moveNoButton();
+    }, { passive: false });
+
+    // Ekstra: çok yaklaşınca da kaçsın (daha gıcık 😈)
+    btnArea.addEventListener("mousemove", (e) => {
+      const b = noBtn.getBoundingClientRect();
+      const dx = (b.left + b.width/2) - e.clientX;
+      const dy = (b.top + b.height/2) - e.clientY;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if(dist < 90) moveNoButton();
+    });
+
+    // EVET'e basınca başarı ekranı
+    yesBtn.addEventListener("click", () => {
+      screenQuestion.classList.add("hidden");
+      screenSuccess.classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    // Sayfa açılınca "Hayır" biraz rastgele yerde başlasın
+    window.addEventListener("load", () => {
+      moveNoButton();
+    });
+  </script>
+</body>
+</html>
